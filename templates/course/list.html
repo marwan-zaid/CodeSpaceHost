@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Course Catalog{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Course Catalog</h1>
+    {% if current_user.is_authenticated and current_user.is_admin() %}
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{{ url_for('admin.create_course') }}" class="btn btn-sm btn-primary">
+                    <i data-feather="plus" class="me-1"></i>Add New Course
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-6">
+                <label for="search" class="form-label">Search Courses</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Search by course code, title, or instructor">
+            </div>
+            <div class="col-md-4">
+                <label for="semester" class="form-label">Semester</label>
+                <select class="form-select" id="semester" name="semester">
+                    <option value="">All Semesters</option>
+                    {% for sem in semesters %}
+                        <option value="{{ sem }}" {% if semester == sem %}selected{% endif %}>{{ sem }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i data-feather="search" class="me-1"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Course Results -->
+{% if courses %}
+    <div class="row">
+        {% for course in courses %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title mb-1">{{ course.course_code }}</h5>
+                                <h6 class="card-subtitle text-muted">{{ course.title }}</h6>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-info">{{ course.credits }} Credits</span>
+                                <br>
+                                <small class="text-muted">{{ course.semester }} {{ course.year }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if course.description %}
+                            <p class="card-text">{{ course.description[:150] }}{% if course.description|length > 150 %}...{% endif %}</p>
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            {% if course.instructor %}
+                                <p class="mb-1"><i data-feather="user" class="me-2"></i><strong>Instructor:</strong> {{ course.instructor }}</p>
+                            {% endif %}
+                            
+                            {% if course.schedule %}
+                                <p class="mb-1"><i data-feather="clock" class="me-2"></i><strong>Schedule:</strong> {{ course.schedule }}</p>
+                            {% endif %}
+                            
+                            {% if course.room %}
+                                <p class="mb-1"><i data-feather="map-pin" class="me-2"></i><strong>Room:</strong> {{ course.room }}</p>
+                            {% endif %}
+                            
+                            <p class="mb-1">
+                                <i data-feather="users" class="me-2"></i><strong>Enrollment:</strong> 
+                                {{ course.enrollments|length }}/{{ course.max_enrollment }}
+                                {% if course.enrollments|length >= course.max_enrollment %}
+                                    <span class="badge bg-danger ms-2">Full</span>
+                                {% elif course.enrollments|length >= course.max_enrollment * 0.8 %}
+                                    <span class="badge bg-warning ms-2">Almost Full</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('course.detail', course_id=course.id) }}" class="btn btn-outline-primary btn-sm">
+                                    <i data-feather="eye" class="me-1"></i>View Details
+                                </a>
+                                
+                                {% if current_user.is_authenticated %}
+                                    {% if current_user.is_admin() %}
+                                        <a href="{{ url_for('admin.edit_course', course_id=course.id) }}" class="btn btn-outline-secondary btn-sm">
+                                            <i data-feather="edit" class="me-1"></i>Edit
+                                        </a>
+                                    {% else %}
+                                        {% set student = current_user.student_profile %}
+                                        {% if student and not course.is_student_enrolled(student.id) %}
+                                            {% if course.has_capacity() %}
+                                                <form method="POST" action="{{ url_for('student.enroll_course', course_id=course.id) }}" class="d-inline">
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i data-feather="plus" class="me-1"></i>Enroll
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <button class="btn btn-secondary btn-sm" disabled>
+                                                    <i data-feather="x" class="me-1"></i>Full
+                                                </button>
+                                            {% endif %}
+                                        {% elif student and course.is_student_enrolled(student.id) %}
+                                            <span class="btn btn-outline-success btn-sm" disabled>
+                                                <i data-feather="check" class="me-1"></i>Enrolled
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center text-muted py-5">
+        <i data-feather="search" class="mb-3" style="width: 64px; height: 64px;"></i>
+        <h4>No Courses Found</h4>
+        {% if search or semester %}
+            <p>No courses match your search criteria. Try adjusting your filters.</p>
+            <a href="{{ url_for('course.list_courses') }}" class="btn btn-primary">Clear Filters</a>
+        {% else %}
+            <p>No courses are currently available in the catalog.</p>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- Pagination placeholder (can be added later if needed) -->
+{% if courses and courses|length >= 20 %}
+    <div class="text-center mt-4">
+        <p class="text-muted">Showing {{ courses|length }} courses</p>
+    </div>
+{% endif %}
+{% endblock %}

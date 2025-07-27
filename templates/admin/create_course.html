@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Create Course - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Create New Course</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('admin.courses') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-1"></i>Back to Courses
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="plus" class="me-2"></i>Course Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="course_code" class="form-label">Course Code *</label>
+                            <input type="text" class="form-control" id="course_code" name="course_code" 
+                                   placeholder="e.g., CS101" required>
+                            <div class="form-text">Unique identifier for the course.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="credits" class="form-label">Credits *</label>
+                            <select class="form-select" id="credits" name="credits" required>
+                                <option value="1">1 Credit</option>
+                                <option value="2">2 Credits</option>
+                                <option value="3" selected>3 Credits</option>
+                                <option value="4">4 Credits</option>
+                                <option value="5">5 Credits</option>
+                                <option value="6">6 Credits</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Course Title *</label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               placeholder="e.g., Introduction to Computer Science" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Course Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  placeholder="Provide a detailed description of the course content and objectives"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="instructor" class="form-label">Instructor</label>
+                            <input type="text" class="form-control" id="instructor" name="instructor" 
+                                   placeholder="e.g., Dr. Jane Smith">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="max_enrollment" class="form-label">Max Enrollment *</label>
+                            <input type="number" class="form-control" id="max_enrollment" name="max_enrollment" 
+                                   value="30" min="1" max="500" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="semester" class="form-label">Semester *</label>
+                            <select class="form-select" id="semester" name="semester" required>
+                                <option value="">Select Semester</option>
+                                <option value="Fall">Fall</option>
+                                <option value="Spring">Spring</option>
+                                <option value="Summer">Summer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="year" class="form-label">Year *</label>
+                            <input type="number" class="form-control" id="year" name="year" 
+                                   value="{{ moment().year if moment else 2024 }}" min="2020" max="2030" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="room" class="form-label">Room</label>
+                            <input type="text" class="form-control" id="room" name="room" 
+                                   placeholder="e.g., Room 101">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="schedule" class="form-label">Schedule</label>
+                        <input type="text" class="form-control" id="schedule" name="schedule" 
+                               placeholder="e.g., MWF 10:00-11:00 AM">
+                        <div class="form-text">Include days of the week and time.</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('admin.courses') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="save" class="me-2"></i>Create Course
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="info" class="me-2"></i>Guidelines</h5>
+            </div>
+            <div class="card-body">
+                <h6>Course Code</h6>
+                <p class="small text-muted">Use a standard format like CS101, MATH201, etc. Make sure it's unique.</p>
+                
+                <h6>Description</h6>
+                <p class="small text-muted">Provide clear information about what students will learn and course requirements.</p>
+                
+                <h6>Schedule Format</h6>
+                <p class="small text-muted">Examples:<br>
+                • MWF 9:00-10:00 AM<br>
+                • T/TH 2:00-3:30 PM<br>
+                • Online Asynchronous</p>
+                
+                <h6>Enrollment Limits</h6>
+                <p class="small text-muted">Consider classroom capacity and teaching resources when setting limits.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

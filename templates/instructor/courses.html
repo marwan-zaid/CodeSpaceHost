@@ -1,0 +1,89 @@
+
+{% extends "base.html" %}
+
+{% block title %}إدارة المواد - المحاضر{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">إدارة المواد الدراسية</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('instructor.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-1"></i>العودة للوحة التحكم
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="book" class="me-2"></i>موادي الدراسية</h5>
+            </div>
+            <div class="card-body">
+                {% if courses %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>رمز المادة</th>
+                                    <th>اسم المادة</th>
+                                    <th>الوصف</th>
+                                    <th>الساعات المعتمدة</th>
+                                    <th>الفصل الدراسي</th>
+                                    <th>المواعيد</th>
+                                    <th>القاعة</th>
+                                    <th>عدد الطلاب</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in courses %}
+                                <tr>
+                                    <td><strong>{{ course.course_code }}</strong></td>
+                                    <td>{{ course.title }}</td>
+                                    <td>
+                                        {% if course.description %}
+                                            {{ course.description[:50] }}...
+                                        {% else %}
+                                            <span class="text-muted">لا يوجد وصف</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ course.credits }}</td>
+                                    <td>{{ course.semester }} {{ course.year }}</td>
+                                    <td>{{ course.schedule or 'غير محدد' }}</td>
+                                    <td>{{ course.room or 'غير محدد' }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ course.get_enrolled_count() }}</span>
+                                        <small class="text-muted">/ {{ course.max_enrollment }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('instructor.course_students', course_id=course.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="عرض الطلاب">
+                                                <i data-feather="users"></i>
+                                            </a>
+                                            <a href="{{ url_for('course.detail', course_id=course.id) }}" 
+                                               class="btn btn-sm btn-outline-info" title="تفاصيل المادة">
+                                                <i data-feather="eye"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i data-feather="book" class="mb-3" style="width: 64px; height: 64px;"></i>
+                        <h5>لا توجد مواد دراسية</h5>
+                        <p>لم يتم تخصيص أي مواد دراسية لك حتى الآن.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Student Registration System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">
+                    <i data-feather="book-open" class="me-3"></i>
+                    Student Registration System
+                </h1>
+                <p class="lead">Manage your academic journey with ease</p>
+            </div>
+
+            {% if current_user.is_authenticated %}
+                <div class="row g-4">
+                    {% if current_user.is_admin() %}
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i data-feather="settings" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5 class="card-title">Admin Dashboard</h5>
+                                    <p class="card-text">Manage students, courses, and system settings.</p>
+                                    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i data-feather="users" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5 class="card-title">Manage Students</h5>
+                                    <p class="card-text">View and manage student registrations and profiles.</p>
+                                    <a href="{{ url_for('admin.students') }}" class="btn btn-secondary">View Students</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% elif current_user.is_instructor() %}
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i data-feather="home" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5 class="card-title">Instructor Dashboard</h5>
+                                    <p class="card-text">Manage your courses and view enrolled students.</p>
+                                    <a href="{{ url_for('instructor.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i data-feather="book" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5 class="card-title">My Courses</h5>
+                                    <p class="card-text">View and manage your assigned courses.</p>
+                                    <a href="{{ url_for('instructor.courses') }}" class="btn btn-outline-secondary">View Courses</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i data-feather="home" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5 class="card-title">My Dashboard</h5>
+                                    <p class="card-text">View your courses, grades, and academic progress.</p>
+                                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i data-feather="book" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5 class="card-title">My Courses</h5>
+                                    <p class="card-text">Enroll in courses and manage your class schedule.</p>
+                                    <a href="{{ url_for('student.courses') }}" class="btn btn-secondary">View Courses</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="row g-4 mt-3">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i data-feather="list" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                <h5 class="card-title">Course Catalog</h5>
+                                <p class="card-text">Browse available courses and their details.</p>
+                                <a href="{{ url_for('course.list_courses') }}" class="btn btn-outline-primary">Browse Courses</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% if not current_user.is_admin() %}
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i data-feather="award" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5 class="card-title">My Grades</h5>
+                                    <p class="card-text">View your academic performance and GPA.</p>
+                                    <a href="{{ url_for('student.grades') }}" class="btn btn-outline-secondary">View Grades</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i data-feather="user-plus" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                <h5 class="card-title">Student Registration</h5>
+                                <p class="card-text">Create your student account to get started with course enrollment.</p>
+                                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Register Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i data-feather="log-in" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                <h5 class="card-title">Student Login</h5>
+                                <p class="card-text">Access your student dashboard and manage your courses.</p>
+                                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Login</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i data-feather="list" class="mb-3" style="width: 48px; height: 48px;"></i>
+                                <h5 class="card-title">Browse Course Catalog</h5>
+                                <p class="card-text">Explore available courses before registering.</p>
+                                <a href="{{ url_for('course.list_courses') }}" class="btn btn-outline-primary">View Courses</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Refresh feather icons after page load
+    document.addEventListener('DOMContentLoaded', function() {
+        feather.replace();
+    });
+</script>
+{% endblock %}

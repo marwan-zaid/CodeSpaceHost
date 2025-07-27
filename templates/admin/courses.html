@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Courses - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Manage Courses</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('admin.create_course') }}" class="btn btn-sm btn-primary">
+                <i data-feather="plus" class="me-1"></i>Add New Course
+            </a>
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-6">
+                <label for="search" class="form-label">Search Courses</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Search by course code, title, or instructor">
+            </div>
+            <div class="col-md-4">
+                <label for="semester" class="form-label">Semester</label>
+                <select class="form-select" id="semester" name="semester">
+                    <option value="">All Semesters</option>
+                    {% for sem in semesters %}
+                        <option value="{{ sem }}" {% if semester == sem %}selected{% endif %}>{{ sem }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i data-feather="search" class="me-1"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Courses List -->
+{% if courses %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i data-feather="book" class="me-2"></i>Courses ({{ courses|length }})</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Course Code</th>
+                            <th>Title</th>
+                            <th>Instructor</th>
+                            <th>Credits</th>
+                            <th>Semester</th>
+                            <th>Enrollment</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for course in courses %}
+                            <tr>
+                                <td>
+                                    <strong>{{ course.course_code }}</strong>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ course.title }}</strong>
+                                        {% if course.description %}
+                                            <br>
+                                            <small class="text-muted">{{ course.description[:50] }}{% if course.description|length > 50 %}...{% endif %}</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>{{ course.instructor or 'TBA' }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ course.credits }}</span>
+                                </td>
+                                <td>{{ course.semester }} {{ course.year }}</td>
+                                <td>
+                                    <div>
+                                        <span class="badge bg-primary">{{ course.enrollments|length }}/{{ course.max_enrollment }}</span>
+                                        {% if course.enrollments|length >= course.max_enrollment %}
+                                            <br><small class="text-danger">Full</small>
+                                        {% elif course.enrollments|length >= course.max_enrollment * 0.8 %}
+                                            <br><small class="text-warning">Almost Full</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge {{ 'bg-success' if course.is_active else 'bg-secondary' }}">
+                                        {{ 'Active' if course.is_active else 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('course.detail', course_id=course.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i data-feather="eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('admin.edit_course', course_id=course.id) }}" 
+                                           class="btn btn-outline-secondary btn-sm">
+                                            <i data-feather="edit"></i>
+                                        </a>
+                                        <a href="{{ url_for('admin.course_grades', course_id=course.id) }}" 
+                                           class="btn btn-outline-info btn-sm">
+                                            <i data-feather="award"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="text-center text-muted py-5">
+        <i data-feather="book" class="mb-3" style="width: 64px; height: 64px;"></i>
+        <h4>No Courses Found</h4>
+        {% if search or semester %}
+            <p>No courses match your search criteria. Try adjusting your filters.</p>
+            <a href="{{ url_for('admin.courses') }}" class="btn btn-primary">Clear Filters</a>
+        {% else %}
+            <p>No courses have been created yet.</p>
+            <a href="{{ url_for('admin.create_course') }}" class="btn btn-primary">Create First Course</a>
+        {% endif %}
+    </div>
+{% endif %}
+
+<!-- Course Statistics -->
+{% if courses %}
+    <div class="row mt-4">
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">{{ courses|length }}</h5>
+                    <p class="card-text">Total Courses</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">{{ courses|selectattr('is_active', 'equalto', true)|list|length }}</h5>
+                    <p class="card-text">Active</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">0</h5>
+                    <p class="card-text">Total Enrolled</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% set total_capacity = courses|map(attribute='max_enrollment')|sum %}
+                    <h5 class="card-title">{{ total_capacity }}</h5>
+                    <p class="card-text">Total Capacity</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% set avg_credits = (courses|map(attribute='credits')|sum / courses|length) if courses|length > 0 else 0 %}
+                    <h5 class="card-title">{{ "%.1f"|format(avg_credits) }}</h5>
+                    <p class="card-text">Avg Credits</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% set utilization = 0 %}
+                    <h5 class="card-title">{{ "%.0f"|format(utilization) }}%</h5>
+                    <p class="card-text">Utilization</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

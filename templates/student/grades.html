@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}My Grades - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">My Grades</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <span class="btn btn-sm btn-outline-info">
+                <i data-feather="trending-up" class="me-1"></i>Current GPA: {{ "%.2f"|format(gpa) }}
+            </span>
+        </div>
+    </div>
+</div>
+
+{% if grades_by_course %}
+    {% for course_id, course_data in grades_by_course.items() %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ course_data.course.course_code }} - {{ course_data.course.title }}</h5>
+                        <small class="text-muted">{{ course_data.course.instructor or 'TBA' }}</small>
+                    </div>
+                    <div>
+                        {% set final_grade = course_data.grades | selectattr('assignment_type', 'equalto', 'final') | list %}
+                        {% if final_grade %}
+                            <span class="badge grade-badge {{ 'bg-success' if final_grade[0].grade_letter in ['A', 'B'] else ('bg-warning' if final_grade[0].grade_letter == 'C' else 'bg-danger') }}">
+                                Final Grade: {{ final_grade[0].grade_letter }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for grade in course_data.grades %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-start border-3 {{ 'border-success' if grade.grade_letter in ['A', 'B'] else ('border-warning' if grade.grade_letter == 'C' else 'border-danger') }}">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0">{{ grade.assignment_type.title() }}</h6>
+                                        <span class="badge grade-badge {{ 'bg-success' if grade.grade_letter in ['A', 'B'] else ('bg-warning' if grade.grade_letter == 'C' else 'bg-danger') }}">
+                                            {{ grade.grade_letter }}
+                                        </span>
+                                    </div>
+                                    
+                                    {% if grade.percentage %}
+                                        <p class="mb-1"><strong>Score:</strong> {{ "%.1f"|format(grade.percentage) }}%</p>
+                                    {% endif %}
+                                    
+                                    {% if grade.grade_points %}
+                                        <p class="mb-1"><strong>Points:</strong> {{ "%.1f"|format(grade.grade_points) }}/4.0</p>
+                                    {% endif %}
+                                    
+                                    <small class="text-muted">
+                                        <i data-feather="calendar" class="me-1"></i>
+                                        {{ grade.recorded_date.strftime('%B %d, %Y') }}
+                                    </small>
+                                    
+                                    {% if grade.recorded_by %}
+                                        <br><small class="text-muted">
+                                            <i data-feather="user" class="me-1"></i>
+                                            Recorded by: {{ grade.recorded_by }}
+                                        </small>
+                                    {% endif %}
+                                    
+                                    {% if grade.comments %}
+                                        <div class="mt-2">
+                                            <small><strong>Comments:</strong></small>
+                                            <p class="small text-muted">{{ grade.comments }}</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    
+    <!-- GPA Summary -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i data-feather="bar-chart-2" class="me-2"></i>Academic Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-3">
+                    <div class="border-end">
+                        <h4 class="text-primary">{{ "%.2f"|format(gpa) }}</h4>
+                        <p class="text-muted mb-0">Current GPA</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border-end">
+                        <h4 class="text-info">{{ grades_by_course|length }}</h4>
+                        <p class="text-muted mb-0">Courses with Grades</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border-end">
+                        {% set total_grades = grades_by_course.values() | map(attribute='grades') | map('length') | sum %}
+                        <h4 class="text-success">{{ total_grades }}</h4>
+                        <p class="text-muted mb-0">Total Grades</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    {% set total_credits = student.enrollments | map(attribute='course.credits') | sum %}
+                    <h4 class="text-warning">{{ total_credits }}</h4>
+                    <p class="text-muted mb-0">Total Credits</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="text-center text-muted py-5">
+        <i data-feather="award" class="mb-3" style="width: 64px; height: 64px;"></i>
+        <h4>No Grades Yet</h4>
+        <p>You don't have any grades recorded yet. Grades will appear here once your instructors enter them.</p>
+        <div class="mt-4">
+            <a href="{{ url_for('student.courses') }}" class="btn btn-primary me-2">View My Courses</a>
+            <a href="{{ url_for('course.list_courses') }}" class="btn btn-outline-primary">Browse Courses</a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

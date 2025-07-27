@@ -1,0 +1,149 @@
+
+{% extends "base.html" %}
+
+{% block title %}طلاب المادة - {{ course.course_code }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2">طلاب مادة {{ course.course_code }}</h1>
+        <p class="text-muted">{{ course.title }}</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('instructor.courses') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-1"></i>العودة للمواد
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Course Info -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>رمز المادة:</strong> {{ course.course_code }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>الساعات المعتمدة:</strong> {{ course.credits }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>الفصل الدراسي:</strong> {{ course.semester }} {{ course.year }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>عدد الطلاب:</strong> {{ enrolled_students|length }} / {{ course.max_enrollment }}
+                    </div>
+                </div>
+                {% if course.schedule %}
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <strong>المواعيد:</strong> {{ course.schedule }}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>القاعة:</strong> {{ course.room or 'غير محدد' }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Students List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="users" class="me-2"></i>قائمة الطلاب المسجلين</h5>
+            </div>
+            <div class="card-body">
+                {% if enrolled_students %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>رقم الطالب</th>
+                                    <th>اسم الطالب</th>
+                                    <th>البريد الإلكتروني</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>تاريخ التسجيل</th>
+                                    <th>الحالة</th>
+                                    <th>الدرجات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in enrolled_students %}
+                                <tr>
+                                    <td><strong>{{ student.student_id }}</strong></td>
+                                    <td>{{ student.full_name }}</td>
+                                    <td>{{ student.user.email }}</td>
+                                    <td>{{ student.phone or 'غير محدد' }}</td>
+                                    <td>
+                                        {% for enrollment in student.enrollments %}
+                                            {% if enrollment.course_id == course.id %}
+                                                {{ enrollment.enrollment_date.strftime('%Y-%m-%d') }}
+                                                {% break %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ 'bg-success' if student.status == 'active' else 'bg-warning' }}">
+                                            {% if student.status == 'active' %}نشط{% else %}{{ student.status }}{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if student.id in student_grades %}
+                                            {% for grade in student_grades[student.id] %}
+                                                <span class="badge bg-secondary me-1">
+                                                    {{ grade.assignment_type }}: {{ grade.grade_letter }}
+                                                </span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted">لا توجد درجات</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Summary Statistics -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>إحصائيات المادة:</h6>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <strong>إجمالي الطلاب:</strong> {{ enrolled_students|length }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>السعة المتاحة:</strong> {{ course.max_enrollment - enrolled_students|length }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>نسبة الإشغال:</strong> {{ "%.1f"|format((enrolled_students|length / course.max_enrollment) * 100) }}%
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>عدد الدرجات المسجلة:</strong> {{ student_grades.keys()|length }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i data-feather="users" class="mb-3" style="width: 64px; height: 64px;"></i>
+                        <h5>لا يوجد طلاب مسجلون</h5>
+                        <p>لم يسجل أي طالب في هذه المادة حتى الآن.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

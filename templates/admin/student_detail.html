@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.full_name }} - Student Details{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2">{{ student.full_name }}</h1>
+        <p class="lead">Student ID: {{ student.student_id }}</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('admin.students') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-1"></i>Back to Students
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Student Information -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="user" class="me-2"></i>Student Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Student ID:</strong><br>{{ student.student_id }}</p>
+                <p><strong>Name:</strong><br>{{ student.full_name }}</p>
+                <p><strong>Username:</strong><br>{{ student.user.username }}</p>
+                <p><strong>Email:</strong><br>{{ student.user.email }}</p>
+                {% if student.phone %}
+                    <p><strong>Phone:</strong><br>{{ student.phone }}</p>
+                {% endif %}
+                {% if student.address %}
+                    <p><strong>Address:</strong><br>{{ student.address }}</p>
+                {% endif %}
+                <p><strong>Status:</strong><br>
+                    <span class="badge {{ 'bg-success' if student.status == 'active' else ('bg-info' if student.status == 'graduated' else 'bg-warning') }}">
+                        {{ student.status.title() }}
+                    </span>
+                </p>
+                <p><strong>Enrollment Date:</strong><br>{{ student.enrollment_date.strftime('%B %d, %Y') }}</p>
+                <p><strong>Account Created:</strong><br>{{ student.user.created_at.strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+
+        <!-- Academic Summary -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="bar-chart-2" class="me-2"></i>Academic Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <h4 class="text-primary">{{ "%.2f"|format(gpa) }}</h4>
+                        <small class="text-muted">Current GPA</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <h4 class="text-info">{{ enrolled_courses|length }}</h4>
+                        <small class="text-muted">Enrolled Courses</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="text-success">{{ grades|length }}</h4>
+                        <small class="text-muted">Total Grades</small>
+                    </div>
+                    <div class="col-6">
+                        {% set total_credits = enrolled_courses|map(attribute='credits')|sum %}
+                        <h4 class="text-warning">{{ total_credits }}</h4>
+                        <small class="text-muted">Credit Hours</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enrolled Courses -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="book-open" class="me-2"></i>Currently Enrolled Courses</h5>
+            </div>
+            <div class="card-body">
+                {% if enrolled_courses %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Course Code</th>
+                                    <th>Title</th>
+                                    <th>Instructor</th>
+                                    <th>Credits</th>
+                                    <th>Schedule</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in enrolled_courses %}
+                                    <tr>
+                                        <td><strong>{{ course.course_code }}</strong></td>
+                                        <td>{{ course.title }}</td>
+                                        <td>{{ course.instructor or 'TBA' }}</td>
+                                        <td><span class="badge bg-info">{{ course.credits }}</span></td>
+                                        <td>{{ course.schedule or 'TBA' }}</td>
+                                        <td>
+                                            <a href="{{ url_for('course.detail', course_id=course.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i data-feather="eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('admin.course_grades', course_id=course.id) }}" 
+                                               class="btn btn-sm btn-outline-secondary">
+                                                <i data-feather="award"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i data-feather="book" class="mb-2" style="width: 48px; height: 48px;"></i>
+                        <p>No enrolled courses</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Grades History -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="trending-up" class="me-2"></i>Grades History</h5>
+            </div>
+            <div class="card-body">
+                {% if grades %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Assignment</th>
+                                    <th>Grade</th>
+                                    <th>Percentage</th>
+                                    <th>Points</th>
+                                    <th>Date</th>
+                                    <th>Recorded By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for grade in grades %}
+                                    <tr>
+                                        <td>{{ grade.course.course_code }}</td>
+                                        <td>{{ grade.assignment_type.title() }}</td>
+                                        <td>
+                                            <span class="badge grade-badge {{ 'bg-success' if grade.grade_letter in ['A', 'B'] else ('bg-warning' if grade.grade_letter == 'C' else 'bg-danger') }}">
+                                                {{ grade.grade_letter }}
+                                            </span>
+                                        </td>
+                                        <td>{{ "%.1f"|format(grade.percentage) if grade.percentage else 'N/A' }}%</td>
+                                        <td>{{ "%.1f"|format(grade.grade_points) if grade.grade_points else 'N/A' }}</td>
+                                        <td>{{ grade.recorded_date.strftime('%m/%d/%Y') }}</td>
+                                        <td>{{ grade.recorded_by or 'System' }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i data-feather="award" class="mb-2" style="width: 48px; height: 48px;"></i>
+                        <p>No grades recorded</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

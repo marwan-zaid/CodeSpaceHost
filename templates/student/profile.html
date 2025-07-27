@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">My Profile</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('student.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="edit" class="me-2"></i>Edit Profile Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">First Name *</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                   value="{{ student.first_name }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                   value="{{ student.last_name }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email Address *</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ student.user.email }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="{{ student.phone or '' }}" placeholder="(555) 123-4567">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea class="form-control" id="address" name="address" rows="3" 
+                                  placeholder="Enter your full address">{{ student.address or '' }}</textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="save" class="me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Student Information Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="info" class="me-2"></i>Student Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Student ID:</strong><br>{{ student.student_id }}</p>
+                <p><strong>Username:</strong><br>{{ student.user.username }}</p>
+                <p><strong>Enrollment Date:</strong><br>{{ student.enrollment_date.strftime('%B %d, %Y') }}</p>
+                <p><strong>Status:</strong><br>
+                    <span class="badge {{ 'bg-success' if student.status == 'active' else 'bg-warning' }}">
+                        {{ student.status.title() }}
+                    </span>
+                </p>
+                <p><strong>Current GPA:</strong><br>
+                    <span class="badge bg-info">3.45</span>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Academic Summary Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="bar-chart" class="me-2"></i>Academic Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Enrolled Courses:</span>
+                        <span class="badge bg-primary">{{ student.enrollments|length }}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Total Grades:</span>
+                        <span class="badge bg-secondary">{{ student.grades|length }}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Account Created:</span>
+                        <small>{{ student.user.created_at.strftime('%m/%d/%Y') }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

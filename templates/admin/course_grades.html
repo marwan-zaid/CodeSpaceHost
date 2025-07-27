@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Grades - {{ course.course_code }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2">Manage Grades</h1>
+        <p class="lead">{{ course.course_code }} - {{ course.title }}</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('admin.courses') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-1"></i>Back to Courses
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Course Info -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Instructor:</strong><br>
+                        {{ course.instructor or 'TBA' }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Schedule:</strong><br>
+                        {{ course.schedule or 'TBA' }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Credits:</strong><br>
+                        {{ course.credits }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Enrolled:</strong><br>
+                        {{ enrolled_students|length }} students
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>{{ course.semester }} {{ course.year }}</h5>
+                <p class="mb-0">{{ course.room or 'Room TBA' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if enrolled_students %}
+    <!-- Add Grade Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i data-feather="plus" class="me-2"></i>Record New Grade</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="student_id" class="form-label">Student *</label>
+                        <select class="form-select" id="student_id" name="student_id" required>
+                            <option value="">Select Student</option>
+                            {% for student in enrolled_students %}
+                                <option value="{{ student.id }}">{{ student.full_name }} ({{ student.student_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="assignment_type" class="form-label">Assignment Type *</label>
+                        <select class="form-select" id="assignment_type" name="assignment_type" required>
+                            <option value="assignment">Assignment</option>
+                            <option value="quiz">Quiz</option>
+                            <option value="midterm">Midterm</option>
+                            <option value="final">Final Exam</option>
+                            <option value="project">Project</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="percentage" class="form-label">Score (%) *</label>
+                        <input type="number" class="form-control" id="percentage" name="percentage" 
+                               min="0" max="100" step="0.1" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="comments" class="form-label">Comments</label>
+                        <input type="text" class="form-control" id="comments" name="comments" 
+                               placeholder="Optional comments">
+                    </div>
+                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i data-feather="plus" class="me-1"></i>Add Grade
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Students and Grades -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i data-feather="users" class="me-2"></i>Student Grades</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Student</th>
+                            <th>Assignment</th>
+                            <th>Quiz</th>
+                            <th>Midterm</th>
+                            <th>Final</th>
+                            <th>Project</th>
+                            <th>Average</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in enrolled_students %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <strong>{{ student.full_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ student.student_id }}</small>
+                                    </div>
+                                </td>
+                                
+                                <!-- Assignment Grades -->
+                                {% set assignment_types = ['assignment', 'quiz', 'midterm', 'final', 'project'] %}
+                                {% for assignment_type in assignment_types %}
+                                    <td>
+                                        {% if student.id in student_grades and assignment_type in student_grades[student.id] %}
+                                            {% set grade = student_grades[student.id][assignment_type] %}
+                                            <span class="badge grade-badge {{ 'bg-success' if grade.grade_letter in ['A', 'B'] else ('bg-warning' if grade.grade_letter == 'C' else 'bg-danger') }}">
+                                                {{ grade.grade_letter }}
+                                            </span>
+                                            <br>
+                                            <small class="text-muted">{{ "%.1f"|format(grade.percentage) if grade.percentage else 'N/A' }}%</small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                
+                                <!-- Average -->
+                                <td>
+                                    {% if student.id in student_grades %}
+                                        {% set student_grade_list = student_grades[student.id].values() %}
+                                        {% set avg_percentage = (student_grade_list|map(attribute='percentage')|select|sum / student_grade_list|map(attribute='percentage')|select|list|length) if student_grade_list|map(attribute='percentage')|select|list|length > 0 else 0 %}
+                                        {% if avg_percentage > 0 %}
+                                            {% if avg_percentage >= 90 %}
+                                                <span class="badge bg-success">A</span>
+                                            {% elif avg_percentage >= 80 %}
+                                                <span class="badge bg-success">B</span>
+                                            {% elif avg_percentage >= 70 %}
+                                                <span class="badge bg-warning">C</span>
+                                            {% elif avg_percentage >= 60 %}
+                                                <span class="badge bg-danger">D</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">F</span>
+                                            {% endif %}
+                                            <br>
+                                            <small class="text-muted">{{ "%.1f"|format(avg_percentage) }}%</small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grade Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% set total_grades = student_grades.values()|map('length')|sum %}
+                    <h5 class="card-title">{{ total_grades }}</h5>
+                    <p class="card-text">Total Grades</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% set graded_students = student_grades.keys()|list|length %}
+                    <h5 class="card-title">{{ graded_students }}/{{ enrolled_students|length }}</h5>
+                    <p class="card-text">Students Graded</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% set all_grades = [] %}
+                    {% for student_grades_dict in student_grades.values() %}
+                        {% for grade in student_grades_dict.values() %}
+                            {% if grade.percentage %}
+                                {% set _ = all_grades.append(grade.percentage) %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    {% set avg_grade = (all_grades|sum / all_grades|length) if all_grades|length > 0 else 0 %}
+                    <h5 class="card-title">{{ "%.1f"|format(avg_grade) }}%</h5>
+                    <p class="card-text">Class Average</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    {% set a_grades = all_grades|select('>=', 90)|list|length %}
+                    {% set completion_rate = (a_grades / all_grades|length * 100) if all_grades|length > 0 else 0 %}
+                    <h5 class="card-title">{{ a_grades }}</h5>
+                    <p class="card-text">A Grades</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="text-center text-muted py-5">
+        <i data-feather="users" class="mb-3" style="width: 64px; height: 64px;"></i>
+        <h4>No Enrolled Students</h4>
+        <p>No students are currently enrolled in this course.</p>
+        <a href="{{ url_for('course.detail', course_id=course.id) }}" class="btn btn-primary">View Course Details</a>
+    </div>
+{% endif %}
+{% endblock %}

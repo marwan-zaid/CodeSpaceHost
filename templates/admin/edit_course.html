@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ course.course_code }} - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2">Edit Course</h1>
+        <p class="lead">{{ course.course_code }} - {{ course.title }}</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('admin.courses') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-1"></i>Back to Courses
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="edit" class="me-2"></i>Course Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="course_code" class="form-label">Course Code</label>
+                            <input type="text" class="form-control" id="course_code" name="course_code" 
+                                   value="{{ course.course_code }}" readonly>
+                            <div class="form-text">Course code cannot be changed after creation.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="credits" class="form-label">Credits *</label>
+                            <select class="form-select" id="credits" name="credits" required>
+                                <option value="1" {% if course.credits == 1 %}selected{% endif %}>1 Credit</option>
+                                <option value="2" {% if course.credits == 2 %}selected{% endif %}>2 Credits</option>
+                                <option value="3" {% if course.credits == 3 %}selected{% endif %}>3 Credits</option>
+                                <option value="4" {% if course.credits == 4 %}selected{% endif %}>4 Credits</option>
+                                <option value="5" {% if course.credits == 5 %}selected{% endif %}>5 Credits</option>
+                                <option value="6" {% if course.credits == 6 %}selected{% endif %}>6 Credits</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Course Title *</label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="{{ course.title }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Course Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{{ course.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="instructor" class="form-label">Instructor</label>
+                            <input type="text" class="form-control" id="instructor" name="instructor" 
+                                   value="{{ course.instructor or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="max_enrollment" class="form-label">Max Enrollment *</label>
+                            <input type="number" class="form-control" id="max_enrollment" name="max_enrollment" 
+                                   value="{{ course.max_enrollment }}" min="1" max="500" required>
+                            <div class="form-text">Currently enrolled: {{ course.enrollments|length }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="semester" class="form-label">Semester *</label>
+                            <select class="form-select" id="semester" name="semester" required>
+                                <option value="">Select Semester</option>
+                                <option value="Fall" {% if course.semester == 'Fall' %}selected{% endif %}>Fall</option>
+                                <option value="Spring" {% if course.semester == 'Spring' %}selected{% endif %}>Spring</option>
+                                <option value="Summer" {% if course.semester == 'Summer' %}selected{% endif %}>Summer</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="year" class="form-label">Year *</label>
+                            <input type="number" class="form-control" id="year" name="year" 
+                                   value="{{ course.year }}" min="2020" max="2030" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="room" class="form-label">Room</label>
+                            <input type="text" class="form-control" id="room" name="room" 
+                                   value="{{ course.room or '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="schedule" class="form-label">Schedule</label>
+                        <input type="text" class="form-control" id="schedule" name="schedule" 
+                               value="{{ course.schedule or '' }}">
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('admin.courses') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-feather="save" class="me-2"></i>Update Course
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Course Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="bar-chart-2" class="me-2"></i>Course Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Current Enrollment:</span>
+                        <span class="badge bg-primary">{{ course.enrollments|length }}/{{ course.max_enrollment }}</span>
+                    </div>
+                </div>
+                
+                <div class="progress mb-3">
+                    {% set enrollment_percentage = (course.enrollments|length / course.max_enrollment * 100) if course.max_enrollment > 0 else 0 %}
+                    <div class="progress-bar" role="progressbar" style="width: {{ enrollment_percentage }}%">
+                        {{ "%.0f"|format(enrollment_percentage) }}%
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Status:</span>
+                        <span class="badge {{ 'bg-success' if course.is_active else 'bg-secondary' }}">
+                            {{ 'Active' if course.is_active else 'Inactive' }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Created:</span>
+                        <small>{{ course.created_at.strftime('%m/%d/%Y') if course.created_at else 'N/A' }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="zap" class="me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('course.detail', course_id=course.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i data-feather="eye" class="me-2"></i>View Course Details
+                    </a>
+                    <a href="{{ url_for('admin.course_grades', course_id=course.id) }}" class="btn btn-outline-secondary btn-sm">
+                        <i data-feather="award" class="me-2"></i>Manage Grades
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

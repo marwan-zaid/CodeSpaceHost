@@ -1,0 +1,103 @@
+
+{% extends "base.html" %}
+
+{% block title %}جميع الطلاب - المحاضر{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">جميع الطلاب المسجلين</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('instructor.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                <i data-feather="arrow-left" class="me-1"></i>العودة للوحة التحكم
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="users" class="me-2"></i>الطلاب المسجلون في موادي</h5>
+            </div>
+            <div class="card-body">
+                {% if students %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>رقم الطالب</th>
+                                    <th>اسم الطالب</th>
+                                    <th>البريد الإلكتروني</th>
+                                    <th>رقم الهاتف</th>
+                                    <th>تاريخ التسجيل</th>
+                                    <th>المواد المسجلة</th>
+                                    <th>الحالة</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td><strong>{{ student.student_id }}</strong></td>
+                                    <td>{{ student.full_name }}</td>
+                                    <td>{{ student.user.email }}</td>
+                                    <td>{{ student.phone or 'غير محدد' }}</td>
+                                    <td>{{ student.enrollment_date.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        {% if student.id in student_enrollments %}
+                                            {% for course in student_enrollments[student.id] %}
+                                                <a href="{{ url_for('instructor.course_students', course_id=course.id) }}" 
+                                                   class="badge bg-primary text-decoration-none me-1">
+                                                    {{ course.course_code }}
+                                                </a>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted">لا توجد مواد</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ 'bg-success' if student.status == 'active' else 'bg-warning' }}">
+                                            {% if student.status == 'active' %}نشط{% else %}{{ student.status }}{% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Summary -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6>ملخص الطلاب:</h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <strong>إجمالي الطلاب:</strong> {{ students|length }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>عدد الموادي:</strong> {{ instructor_courses|length }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>متوسط الطلاب لكل مادة:</strong> 
+                                            {{ "%.1f"|format(students|length / instructor_courses|length if instructor_courses|length > 0 else 0) }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i data-feather="users" class="mb-3" style="width: 64px; height: 64px;"></i>
+                        <h5>لا يوجد طلاب</h5>
+                        <p>لا يوجد طلاب مسجلون في موادك حالياً.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

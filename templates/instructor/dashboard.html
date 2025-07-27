@@ -1,0 +1,163 @@
+
+{% extends "base.html" %}
+
+{% block title %}Instructor Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">مرحباً {{ instructor.full_name }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('instructor.courses') }}" class="btn btn-sm btn-primary">
+                <i data-feather="book" class="me-1"></i>مشاهدة المواد
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i data-feather="book" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4 class="card-title">{{ total_courses }}</h4>
+                <p class="card-text">إجمالي المواد</p>
+                <a href="{{ url_for('instructor.courses') }}" class="btn btn-sm btn-outline-primary">عرض المواد</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i data-feather="users" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4 class="card-title">{{ total_enrollments }}</h4>
+                <p class="card-text">إجمالي الطلاب المسجلين</p>
+                <a href="{{ url_for('instructor.all_students') }}" class="btn btn-sm btn-outline-primary">عرض الطلاب</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i data-feather="trending-up" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4 class="card-title">{{ "%.1f"|format(total_enrollments / total_courses if total_courses > 0 else 0) }}</h4>
+                <p class="card-text">متوسط الطلاب لكل مادة</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Courses -->
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i data-feather="book" class="me-2"></i>موادي الدراسية</h5>
+                <a href="{{ url_for('instructor.courses') }}" class="btn btn-sm btn-outline-primary">عرض الكل</a>
+            </div>
+            <div class="card-body">
+                {% if courses %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>رمز المادة</th>
+                                    <th>اسم المادة</th>
+                                    <th>الفصل الدراسي</th>
+                                    <th>عدد الطلاب</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in courses[:5] %}
+                                <tr>
+                                    <td><strong>{{ course.course_code }}</strong></td>
+                                    <td>{{ course.title }}</td>
+                                    <td>{{ course.semester }} {{ course.year }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ course.get_enrolled_count() }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('instructor.course_students', course_id=course.id) }}" 
+                                           class="btn btn-sm btn-outline-primary">عرض الطلاب</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i data-feather="book" class="mb-2" style="width: 32px; height: 32px;"></i>
+                        <p>لا توجد مواد مُسندة إليك حالياً</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Enrollments -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="user-plus" class="me-2"></i>التسجيلات الحديثة</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_enrollments %}
+                    {% for enrollment in recent_enrollments[:5] %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ enrollment.student.full_name }}</h6>
+                                <small class="text-muted">{{ enrollment.course.course_code }}</small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">{{ enrollment.enrollment_date.strftime('%m/%d/%Y') }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i data-feather="users" class="mb-2" style="width: 32px; height: 32px;"></i>
+                        <p>لا توجد تسجيلات حديثة</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="zap" class="me-2"></i>إجراءات سريعة</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('instructor.courses') }}" class="btn btn-outline-primary w-100">
+                            <i data-feather="book" class="me-2"></i>إدارة المواد
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('instructor.all_students') }}" class="btn btn-outline-secondary w-100">
+                            <i data-feather="users" class="me-2"></i>عرض جميع الطلاب
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('course.list_courses') }}" class="btn btn-outline-info w-100">
+                            <i data-feather="eye" class="me-2"></i>كتالوج المواد</a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-outline-success w-100" disabled>
+                            <i data-feather="download" class="me-2"></i>تصدير البيانات
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Admin Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('admin.create_course') }}" class="btn btn-sm btn-primary">
+                <i data-feather="plus" class="me-1"></i>Add Course
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i data-feather="users" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4 class="card-title">{{ total_students }}</h4>
+                <p class="card-text">Total Students</p>
+                <a href="{{ url_for('admin.students') }}" class="btn btn-sm btn-outline-primary">View Students</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i data-feather="book" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4 class="card-title">{{ total_courses }}</h4>
+                <p class="card-text">Active Courses</p>
+                <a href="{{ url_for('admin.courses') }}" class="btn btn-sm btn-outline-primary">View Courses</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i data-feather="user-check" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4 class="card-title">{{ total_enrollments }}</h4>
+                <p class="card-text">Total Enrollments</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i data-feather="trending-up" class="mb-2" style="width: 32px; height: 32px;"></i>
+                <h4 class="card-title">{{ "%.1f"|format(total_enrollments / total_courses if total_courses > 0 else 0) }}</h4>
+                <p class="card-text">Avg. Enrollments per Course</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <!-- Recent Student Registrations -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i data-feather="user-plus" class="me-2"></i>Recent Student Registrations</h5>
+                <a href="{{ url_for('admin.students') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_students %}
+                    {% for student in recent_students %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ student.full_name }}</h6>
+                                <small class="text-muted">{{ student.student_id }} | {{ student.user.email }}</small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">{{ student.enrollment_date.strftime('%m/%d/%Y') }}</small>
+                                <br>
+                                <span class="badge {{ 'bg-success' if student.status == 'active' else 'bg-warning' }}">
+                                    {{ student.status.title() }}
+                                </span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i data-feather="users" class="mb-2" style="width: 32px; height: 32px;"></i>
+                        <p>No recent registrations</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Popular Courses -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i data-feather="star" class="me-2"></i>Popular Courses</h5>
+                <a href="{{ url_for('admin.courses') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+                {% if popular_courses %}
+                    {% for course, enrollment_count in popular_courses %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 border rounded">
+                            <div>
+                                <h6 class="mb-1">{{ course.course_code }}</h6>
+                                <small class="text-muted">{{ course.title }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary">{{ enrollment_count }} enrolled</span>
+                                <br>
+                                <small class="text-muted">{{ course.instructor or 'TBA' }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i data-feather="book" class="mb-2" style="width: 32px; height: 32px;"></i>
+                        <p>No enrollment data available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="zap" class="me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('admin.create_course') }}" class="btn btn-outline-primary w-100">
+                            <i data-feather="plus" class="me-2"></i>Create Course
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('admin.students') }}" class="btn btn-outline-secondary w-100">
+                            <i data-feather="users" class="me-2"></i>Manage Students
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('admin.courses') }}" class="btn btn-outline-info w-100">
+                            <i data-feather="book" class="me-2"></i>Manage Courses
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('course.list_courses') }}" class="btn btn-outline-success w-100">
+                            <i data-feather="eye" class="me-2"></i>View Course Catalog
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- System Status -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="activity" class="me-2"></i>System Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <i data-feather="database" class="text-success"></i>
+                        </div>
+                        <h6>Database</h6>
+                        <span class="badge bg-success">Online</span>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <i data-feather="server" class="text-success"></i>
+                        </div>
+                        <h6>Application</h6>
+                        <span class="badge bg-success">Running</span>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <i data-feather="shield" class="text-success"></i>
+                        </div>
+                        <h6>Authentication</h6>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-2">
+                            <i data-feather="clock" class="text-info"></i>
+                        </div>
+                        <h6>Last Updated</h6>
+                        <small class="text-muted">{{ moment().format('MM/DD/YYYY HH:mm') if moment else 'Now' }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

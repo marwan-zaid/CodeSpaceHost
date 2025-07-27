@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}My Courses - {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">My Courses</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('course.list_courses') }}" class="btn btn-sm btn-primary">
+                <i data-feather="plus" class="me-1"></i>Browse More Courses
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Enrolled Courses -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="book-open" class="me-2"></i>Currently Enrolled ({{ enrolled_courses|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if enrolled_courses %}
+                    <div class="row">
+                        {% for course in enrolled_courses %}
+                            <div class="col-lg-6 mb-3">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ course.course_code }}</h6>
+                                                <p class="card-text fw-bold">{{ course.title }}</p>
+                                            </div>
+                                            <span class="badge bg-success">{{ course.credits }} Credits</span>
+                                        </div>
+                                        
+                                        <p class="card-text text-muted mb-2">
+                                            <i data-feather="user" class="me-1"></i>{{ course.instructor or 'TBA' }}
+                                        </p>
+                                        
+                                        <p class="card-text text-muted mb-3">
+                                            <i data-feather="clock" class="me-1"></i>{{ course.schedule or 'TBA' }}
+                                            {% if course.room %}
+                                                | <i data-feather="map-pin" class="me-1"></i>{{ course.room }}
+                                            {% endif %}
+                                        </p>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ url_for('course.detail', course_id=course.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">View Details</a>
+                                            <form method="POST" action="{{ url_for('student.drop_course', course_id=course.id) }}" 
+                                                  class="d-inline" onsubmit="return confirm('Are you sure you want to drop this course?')">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Drop Course</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i data-feather="book" class="mb-3" style="width: 64px; height: 64px;"></i>
+                        <h5>No Enrolled Courses</h5>
+                        <p>You haven't enrolled in any courses yet.</p>
+                        <a href="{{ url_for('course.list_courses') }}" class="btn btn-primary">Browse Available Courses</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Courses -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i data-feather="search" class="me-2"></i>Available Courses to Enroll</h5>
+            </div>
+            <div class="card-body">
+                {% if available_courses %}
+                    <div class="row">
+                        {% for course in available_courses %}
+                            <div class="col-lg-6 mb-3">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ course.course_code }}</h6>
+                                                <p class="card-text fw-bold">{{ course.title }}</p>
+                                            </div>
+                                            <span class="badge bg-info">{{ course.credits }} Credits</span>
+                                        </div>
+                                        
+                                        <p class="card-text text-muted mb-2">
+                                            <i data-feather="user" class="me-1"></i>{{ course.instructor or 'TBA' }}
+                                        </p>
+                                        
+                                        <p class="card-text text-muted mb-2">
+                                            <i data-feather="clock" class="me-1"></i>{{ course.schedule or 'TBA' }}
+                                            {% if course.room %}
+                                                | <i data-feather="map-pin" class="me-1"></i>{{ course.room }}
+                                            {% endif %}
+                                        </p>
+                                        
+                                        <p class="card-text text-muted mb-3">
+                                            <i data-feather="users" class="me-1"></i>
+                                            {{ course.enrollments|length }}/{{ course.max_enrollment }} enrolled
+                                        </p>
+                                        
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ url_for('course.detail', course_id=course.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">View Details</a>
+                                            {% if course.has_capacity() %}
+                                                <form method="POST" action="{{ url_for('student.enroll_course', course_id=course.id) }}" 
+                                                      class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-success">Enroll</button>
+                                                </form>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-secondary" disabled>Full</button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if available_courses|length > 6 %}
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('course.list_courses') }}" class="btn btn-outline-primary">
+                                View All Available Courses
+                            </a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i data-feather="check-circle" class="mb-3" style="width: 64px; height: 64px;"></i>
+                        <h5>No Available Courses</h5>
+                        <p>You are enrolled in all available courses, or no courses are currently available for enrollment.</p>
+                        <a href="{{ url_for('course.list_courses') }}" class="btn btn-outline-primary">Browse Course Catalog</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
