@@ -20,7 +20,7 @@ login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'info'
 
 # 2. Create the Application Factory function
-def create_app():
+def create_app(**kwargs):
     app = Flask(__name__)
 
     # 3. Configure the app from environment variables
